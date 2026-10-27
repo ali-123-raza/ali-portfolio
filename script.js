@@ -260,6 +260,16 @@ function findPost(slug) {
   return postsCache.find((post) => post.id && post.id.slice(0, 8) === suffix);
 }
 
+let lastViewPath = null;
+
+function trackView(path, title) {
+  if (path === lastViewPath) return;
+  lastViewPath = path;
+  const send = () => window.goatcounter?.count?.({ path, title });
+  if (window.goatcounter?.count) send();
+  else window.addEventListener("load", send, { once: true });
+}
+
 function showArticle(slug) {
   document.body.classList.add("reading");
   const post = findPost(slug);
@@ -276,6 +286,7 @@ function showArticle(slug) {
   articleView.innerHTML = articleHtml(post, postsCache.indexOf(post));
   document.title = `${post.title} | Ali Raza`;
   descriptionMeta.content = summaryOf(post);
+  trackView(`/writing/${post.slug}`, post.title);
   window.scrollTo({ top: 0, behavior: "instant" });
   articleView.querySelector("h1").focus({ preventScroll: true });
   updateProgress();
@@ -288,6 +299,7 @@ function showHome() {
   readProgress.style.transform = "scaleX(0)";
   document.title = siteTitle;
   descriptionMeta.content = siteDescription;
+  trackView("/", siteTitle);
   if (!wasReading) return;
   const hash = location.hash;
   if (listScroll !== null && (hash === "" || hash === "#writing")) {
