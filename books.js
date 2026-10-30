@@ -21,7 +21,10 @@
   const statusEl = document.querySelector("#book-status");
   const submit = document.querySelector("#book-submit");
   const datalist = document.querySelector("#book-categories");
+  const cancelBtn = document.querySelector("#book-cancel");
+  const heading = document.querySelector("#upload-heading");
 
+  let editingId = null;
   let books = [];
   let category = "All";
   let query = "";
@@ -86,7 +89,7 @@
           <div class="book-actions">
             <a class="book-download" data-download="${book.id}" href="${escapeHtml(publicUrl(book.file_path, label))}" rel="noopener">Download <span aria-hidden="true">↓</span></a>
             ${ext === "pdf" ? `<a class="book-preview" href="${escapeHtml(publicUrl(book.file_path))}" target="_blank" rel="noopener">Read online</a>` : ""}
-            ${editorMode ? `<button class="book-delete" type="button" data-delete="${book.id}">Delete</button>` : ""}
+            ${editorMode ? `<button class="book-edit" type="button" data-edit="${book.id}">Edit</button><button class="book-delete" type="button" data-delete="${book.id}">Delete</button>` : ""}
           </div>
         </div>
       </article>`;
@@ -101,8 +104,18 @@
       grid.innerHTML = '<p class="list-empty">No books match that search.</p>';
     } else {
       grid.innerHTML = list.map(bookHtml).join("");
+      addReadMore();
     }
   }
+
+  function addReadMore() {
+    grid.querySelectorAll(".book-desc").forEach((desc) => {
+      if (desc.nextElementSibling?.classList.contains("desc-toggle")) return;
+      if (desc.scrollHeight <= desc.clientHeight + 1) return;
+      desc.insertAdjacentHTML("afterend", '<button class="desc-toggle" type="button" aria-expanded="false">Read more</button>');
+    });
+  }
+  document.fonts?.ready.then(addReadMore);
 
   async function loadBooks() {
     if (!supabaseClient) {
@@ -129,6 +142,14 @@
   });
 
   grid.addEventListener("click", async (event) => {
+    const toggle = event.target.closest(".desc-toggle");
+    if (toggle) {
+      const open = toggle.previousElementSibling.classList.toggle("expanded");
+      toggle.textContent = open ? "Show less" : "Read more";
+      toggle.setAttribute("aria-expanded", String(open));
+      return;
+    }
+
     const link = event.target.closest("[data-download]");
     if (link) {
       const book = books.find((b) => b.id === link.dataset.download);
@@ -138,6 +159,13 @@
       const counter = grid.querySelector(`[data-count="${book.id}"]`);
       if (counter) counter.textContent = book.downloads;
       window.goatcounter?.count?.({ path: `/books/download/${safeName(book.title)}`, title: `Download: ${book.title}`, event: true });
+      return;
+    }
+
+    const edit = event.target.closest("[data-edit]");
+    if (edit) {
+      const book = books.find((b) => b.id === edit.dataset.edit);
+      if (book) startEdit(book);
       return;
     }
 
@@ -160,15 +188,38 @@
     if (file.size > MAX_BYTES) { say(`That file is ${formatSize(file.size)}. The limit is 50 MB.`, true); return; }
     picked = file;
     dropzone.classList.add("has-file");
-    dropTitle.textContent = file.name;
+    dropTitle.textContent = editingId ? `Replacing with: ${file.name}` : file.name;
     dropSub.textContent = `${ext.toUpperCase()} · ${formatSize(file.size)} · click to change`;
     if (!titleField.value.trim()) titleField.value = stem(file.name).replace(/[_-]+/g, " ").trim();
     say("");
     titleField.focus();
   }
 
+  function startEdit(book) {
+    resetUpload();
+    editingId = book.id;
+    titleField.value = book.title;
+    authorField.value = book.author || "";
+    categoryField.value = book.category || "";
+    descField.value = book.description || "";
+    dropzone.classList.add("has-file");
+    dropTitle.textContent = `Current file: ${book.file_name || book.file_path.split("/").pop()}`;
+    dropSub.textContent = `${(book.file_type || "").toUpperCase()} · ${formatSize(book.file_size)} · drop a new file here only to replace it`;
+    heading.textContent = "Edit book details";
+    submit.innerHTML = 'Save changes <span aria-hidden="true">↗</span>';
+    cancelBtn.hidden = false;
+    upload.scrollIntoView({ behavior: "smooth", block: "center" });
+    titleField.focus({ preventScroll: true });
+  }
+
+  cancelBtn.addEventListener("click", () => { resetUpload(); say(""); });
+
   function resetUpload() {
     picked = null;
+    editingId = null;
+    heading.textContent = "Add a book to the shelf";
+    submit.innerHTML = 'Upload book <span aria-hidden="true">↗</span>';
+    cancelBtn.hidden = true;
     upload.reset();
     dropzone.classList.remove("has-file");
     dropTitle.textContent = "Drop a book here, or click to choose";
@@ -205,50 +256,60 @@
   upload.addEventListener("submit", async (event) => {
     event.preventDefault();
     if (!currentUser || !supabaseClient) { say("Please sign in as owner first.", true); return; }
-    if (!picked) { say("Choose a book file first.", true); return; }
+    const editing = editingId ? books.find((b) => b.id === editingId) : null;
+    if (!editing && !picked) { say("Choose a book file first.", true); return; }
 
     submit.disabled = true;
-    progress.hidden = false;
+    progress.hidden = !picked;
     bar.style.width = "0";
-    say("Uploading…");
+    say(editing ? "Saving…" : "Uploading…");
     const stamp = Date.now();
-    const ext = extOf(picked.name);
     const title = titleField.value.trim();
-    const filePath = `files/${stamp}-${safeName(title)}.${ext}`;
-    let coverPath = null;
+    const ext = picked ? extOf(picked.name) : editing.file_type;
+    const created = [];
+    const stale = [];
+    const fields = {
+      title,
+      author: authorField.value.trim() || null,
+      category: categoryField.value.trim() || null,
+      description: descField.value.trim() || null,
+      file_name: `${safeName(title)}.${ext}`,
+      file_type: ext
+    };
 
     try {
-      const { data } = await supabaseClient.auth.getSession();
-      await putWithProgress(filePath, picked, data.session.access_token, (ratio) => { bar.style.width = `${Math.round(ratio * 100)}%`; });
+      if (picked) {
+        const filePath = `files/${stamp}-${safeName(title)}.${ext}`;
+        const { data } = await supabaseClient.auth.getSession();
+        await putWithProgress(filePath, picked, data.session.access_token, (ratio) => { bar.style.width = `${Math.round(ratio * 100)}%`; });
+        created.push(filePath);
+        if (editing) stale.push(editing.file_path);
+        fields.file_path = filePath;
+        fields.file_size = picked.size;
+      }
 
       const cover = coverField.files[0];
       if (cover) {
-        coverPath = `covers/${stamp}-${safeName(title)}.${extOf(cover.name) || "jpg"}`;
+        const coverPath = `covers/${stamp}-${safeName(title)}.${extOf(cover.name) || "jpg"}`;
         const { error } = await storage().upload(coverPath, cover, { contentType: cover.type });
-        if (error) { coverPath = null; }
+        if (!error) {
+          created.push(coverPath);
+          if (editing?.cover_path) stale.push(editing.cover_path);
+          fields.cover_path = coverPath;
+        }
       }
 
-      const { error } = await supabaseClient.from("books").insert({
-        owner_id: currentUser.id,
-        title,
-        author: authorField.value.trim() || null,
-        category: categoryField.value.trim() || null,
-        description: descField.value.trim() || null,
-        file_path: filePath,
-        cover_path: coverPath,
-        file_name: `${safeName(title)}.${ext}`,
-        file_type: ext,
-        file_size: picked.size
-      });
-      if (error) {
-        await storage().remove([filePath, coverPath].filter(Boolean));
-        throw error;
-      }
+      const { error } = editing
+        ? await supabaseClient.from("books").update(fields).eq("id", editing.id)
+        : await supabaseClient.from("books").insert({ ...fields, owner_id: currentUser.id });
+      if (error) throw error;
+
+      if (stale.length) await storage().remove(stale);
       resetUpload();
-      say("Book added to the shelf.");
+      say(editing ? "Changes saved." : "Book added to the shelf.");
       await loadBooks();
     } catch (err) {
-      await storage().remove([filePath]);
+      if (created.length) await storage().remove(created);
       say(err.message || "Upload failed.", true);
       progress.hidden = true;
     } finally {

@@ -145,6 +145,10 @@ h1 em { white-space: nowrap; }
 .book-upload .form-footer { margin-top: 22px; }
 .book-upload .form-footer button { border: 0; padding: 13px 20px; background: var(--ink); color: var(--paper); font: 12px var(--mono); cursor: pointer; transition: background .2s ease; }
 .book-upload .form-footer button:hover { background: var(--rust); }
+.book-upload .form-footer .secondary-button { padding: 0; background: transparent; color: var(--rust); }
+.book-upload .form-footer .secondary-button:hover { background: transparent; color: var(--ink); }
+.book-edit { padding: 0; border: 0; background: transparent; color: var(--rust); font: 11px var(--mono); cursor: pointer; }
+.book-edit:hover { color: var(--ink); }
 .book-upload .form-footer button:disabled { opacity: .5; cursor: progress; }
 #book-status { color: var(--rust); font: 11px var(--mono); }
 #book-status.is-error { color: #a1301a; font-weight: 500; }
@@ -170,6 +174,9 @@ h1 em { white-space: nowrap; }
 .book-info h3 { margin: 0; font-size: 18px; line-height: 1.25; letter-spacing: -.025em; font-weight: 600; }
 .book-author { margin: 5px 0 0; color: #70786f; font: italic 14px Georgia, serif; }
 .book-desc { margin: 12px 0 0; color: #737a72; font-size: 12.5px; line-height: 1.55; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.book-desc.expanded { display: block; -webkit-line-clamp: unset; overflow: visible; }
+.desc-toggle { margin: 6px 0 0; padding: 0; border: 0; background: transparent; color: var(--rust); font: 11px var(--mono); cursor: pointer; }
+.desc-toggle:hover { color: var(--ink); }
 .book-meta { margin: 12px 0 0; color: #8a9088; font: 10.5px var(--mono); }
 .book-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin-top: 16px; }
 .book-download { display: inline-flex; gap: 8px; padding: 9px 14px; background: var(--ink); color: var(--paper); font: 12px var(--mono); transition: background .2s ease, transform .2s ease; }

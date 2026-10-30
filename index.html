@@ -61,7 +61,7 @@
         </div>
 
         <form class="book-upload" id="book-upload" autocomplete="off">
-          <div class="upload-head"><p class="eyebrow">Owner only</p><h3>Add a book to the shelf</h3></div>
+          <div class="upload-head"><p class="eyebrow">Owner only</p><h3 id="upload-heading">Add a book to the shelf</h3></div>
           <label class="dropzone" id="dropzone" for="book-file">
             <input id="book-file" type="file" accept=".pdf,.epub,.mobi,.azw3,.djvu,.doc,.docx,.txt,.zip" hidden />
             <span class="dropzone-icon" aria-hidden="true">↑</span>
@@ -76,7 +76,7 @@
             <div class="wide"><label for="book-description">Short description <span>(optional)</span></label><textarea id="book-description" rows="2" maxlength="300" placeholder="Why is this worth reading?"></textarea></div>
           </div>
           <div class="upload-progress" id="upload-progress" hidden><div class="upload-bar" id="upload-bar"></div></div>
-          <div class="form-footer"><span id="book-status" role="status"></span><button id="book-submit" type="submit">Upload book <span aria-hidden="true">↗</span></button></div>
+          <div class="form-footer"><span id="book-status" role="status"></span><div class="form-actions"><button class="secondary-button" id="book-cancel" type="button" hidden>Cancel</button><button id="book-submit" type="submit">Upload book <span aria-hidden="true">↗</span></button></div></div>
         </form>
 
         <div class="book-toolbar">
