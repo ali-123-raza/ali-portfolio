@@ -19,6 +19,12 @@
 
 The anon key is safe to expose in a frontend only when Row Level Security policies are enabled. Never put a Supabase service-role key in this folder or in browser code.
 
+## Books library
+
+1. In Supabase > SQL Editor, run `supabase-books.sql` (creates the `books` table, a public `books` storage bucket, policies, and the download counter).
+2. Sign in with **Owner login**, scroll to **Books**, and drag a file into the upload box.
+3. Free plan limits: 1 GB storage, 50 MB per file, 5 GB monthly bandwidth. Keep an eye on usage in Supabase > Reports.
+
 ## Hosting
 
 Netlify, Vercel, and Cloudflare Pages can host the current static files. Upload the project folder, configure the custom domain, and enable HTTPS. Supabase remains the database, authentication service, and file storage.

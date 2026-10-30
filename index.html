@@ -23,6 +23,7 @@
       <a class="wordmark" href="#top" aria-label="Ali Raza home"><span class="header-avatar"><img src="profile.jpeg" alt="" /></span><span class="wordmark-name">Ali Raza</span></a>
       <nav class="site-nav" aria-label="Main navigation">
         <a href="#writing">Writing</a>
+        <a href="#books">Books</a>
         <a href="#about">About</a>
         <a href="#contact">Contact</a>
       </nav>
@@ -48,6 +49,41 @@
           <p class="section-note">Click any post to read it in full.<br />Full essays, field notes, and questions.</p>
         </div>
         <div class="post-list" id="post-list" aria-live="polite"></div>
+      </section>
+
+      <section class="books-section" id="books" aria-labelledby="books-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">The library</p>
+            <h2 id="books-title">Books <em>worth sharing.</em></h2>
+          </div>
+          <p class="section-note">Free to download, free to share.<br />Notes, texts, and favourites from my shelf.</p>
+        </div>
+
+        <form class="book-upload" id="book-upload" autocomplete="off">
+          <div class="upload-head"><p class="eyebrow">Owner only</p><h3>Add a book to the shelf</h3></div>
+          <label class="dropzone" id="dropzone" for="book-file">
+            <input id="book-file" type="file" accept=".pdf,.epub,.mobi,.azw3,.djvu,.doc,.docx,.txt,.zip" hidden />
+            <span class="dropzone-icon" aria-hidden="true">↑</span>
+            <span class="dropzone-title" id="dropzone-title">Drop a book here, or click to choose</span>
+            <span class="dropzone-sub" id="dropzone-sub">PDF, EPUB, MOBI, AZW3, DJVU, DOC, TXT or ZIP &middot; up to 50 MB</span>
+          </label>
+          <div class="upload-fields">
+            <div><label for="book-title">Title</label><input id="book-title" type="text" required maxlength="140" placeholder="Book title" /></div>
+            <div><label for="book-author">Author</label><input id="book-author" type="text" maxlength="100" placeholder="Author name" /></div>
+            <div><label for="book-category">Category</label><input id="book-category" type="text" maxlength="40" list="book-categories" placeholder="e.g. Mathematics" /><datalist id="book-categories"></datalist></div>
+            <div><label for="book-cover">Cover image <span>(optional)</span></label><input id="book-cover" type="file" accept="image/*" /></div>
+            <div class="wide"><label for="book-description">Short description <span>(optional)</span></label><textarea id="book-description" rows="2" maxlength="300" placeholder="Why is this worth reading?"></textarea></div>
+          </div>
+          <div class="upload-progress" id="upload-progress" hidden><div class="upload-bar" id="upload-bar"></div></div>
+          <div class="form-footer"><span id="book-status" role="status"></span><button id="book-submit" type="submit">Upload book <span aria-hidden="true">↗</span></button></div>
+        </form>
+
+        <div class="book-toolbar">
+          <input class="book-search" id="book-search" type="search" placeholder="Search title or author" aria-label="Search books" />
+          <div class="book-chips" id="book-chips" role="group" aria-label="Filter by category"></div>
+        </div>
+        <div class="book-grid" id="book-grid" aria-live="polite"></div>
       </section>
 
       <article class="article-view" id="article-view" aria-live="polite"></article>
@@ -130,6 +166,7 @@
   <script src="supabase.min.js"></script>
   <script src="supabase-config.js"></script>
   <script src="script.js"></script>
+  <script src="books.js"></script>
   <script data-goatcounter="https://alirazatech.goatcounter.com/count"
           data-goatcounter-settings='{"no_onload": true}'
           async src="//gc.zgo.at/count.js"></script>

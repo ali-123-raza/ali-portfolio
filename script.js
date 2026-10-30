@@ -53,6 +53,7 @@ function setEditorMode(isOwner) {
   document.body.classList.toggle("owner-mode", isOwner);
   authButton.querySelector("span").textContent = isOwner ? "Sign out" : "Owner login";
   renderPostsFromCache();
+  window.renderBooks?.();
 }
 
 function getPosts() {
