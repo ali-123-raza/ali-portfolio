@@ -211,6 +211,7 @@ function renderPostsFromCache() {
       <div>
         <h3 class="post-title"><a href="${post.href || `#/writing/${post.slug}`}">${escapeHtml(post.title)}</a></h3>
         <p class="post-excerpt">${escapeHtml(summaryOf(post))}</p>
+        <div class="post-share">${shareMenuHtml(postUrl(post), post.title)}</div>
         ${editorMode && !post.href ? `<div class="post-actions"><button type="button" data-action="edit" data-index="${index}">Edit</button><button type="button" data-action="delete" data-index="${index}">Delete</button></div>` : ""}
       </div>
       <div class="post-meta"><time>${escapeHtml(post.shortDate)}</time><span>${post.minutes} min read</span></div>
@@ -221,6 +222,59 @@ function renderPostsFromCache() {
 function articleUrl(post) {
   return `${location.origin}${location.pathname}#/writing/${post.slug}`;
 }
+
+function postUrl(post) {
+  return post.href ? new URL(post.href, location.href).href : articleUrl(post);
+}
+
+function shareMenuHtml(url, title) {
+  const u = encodeURIComponent(url);
+  const t = encodeURIComponent(title);
+  return `
+    <div class="share-wrap" data-url="${escapeHtml(url)}" data-title="${escapeHtml(title)}">
+      <button class="share-copy" type="button" data-copy>Copy link</button>
+      <details class="share-menu">
+        <summary>Share</summary>
+        <div class="share-pop">
+          <a href="https://wa.me/?text=${t}%20${u}" target="_blank" rel="noopener">WhatsApp</a>
+          <a href="https://www.linkedin.com/sharing/share-offsite/?url=${u}" target="_blank" rel="noopener">LinkedIn</a>
+          <a href="https://twitter.com/intent/tweet?text=${t}&url=${u}" target="_blank" rel="noopener">X</a>
+          <a href="https://www.facebook.com/sharer/sharer.php?u=${u}" target="_blank" rel="noopener">Facebook</a>
+          <a href="mailto:?subject=${t}&body=${u}">Email</a>
+        </div>
+      </details>
+    </div>`;
+}
+
+document.addEventListener("click", async (event) => {
+  document.querySelectorAll(".share-menu[open]").forEach((menu) => {
+    if (!menu.contains(event.target)) menu.removeAttribute("open");
+  });
+
+  const copy = event.target.closest("[data-copy]");
+  if (copy) {
+    const { url } = copy.closest(".share-wrap").dataset;
+    try {
+      await navigator.clipboard.writeText(url);
+      copy.textContent = "Link copied ✓";
+    } catch {
+      window.prompt("Copy this link:", url);
+    }
+    setTimeout(() => { copy.textContent = "Copy link"; }, 2000);
+    return;
+  }
+
+  const summary = event.target.closest(".share-menu summary");
+  if (summary && navigator.share && window.matchMedia("(pointer: coarse)").matches) {
+    event.preventDefault();
+    const { url, title } = summary.closest(".share-wrap").dataset;
+    navigator.share({ title, url }).catch(() => {});
+  }
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") document.querySelectorAll(".share-menu[open]").forEach((menu) => menu.removeAttribute("open"));
+});
 
 function articleHtml(post, index) {
   const newer = postsCache[index - 1];

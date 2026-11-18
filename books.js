@@ -78,7 +78,7 @@
       : `<span class="cover-title">${escapeHtml(book.title)}</span><span class="cover-author">${escapeHtml(book.author || "")}</span>`;
     const meta = [formatSize(book.file_size), `<span data-count="${book.id}">${book.downloads || 0}</span> downloads`].filter(Boolean).join(" · ");
     return `
-      <article class="book" data-id="${book.id}">
+      <article class="book" id="book-${book.id}" data-id="${book.id}">
         <div class="book-cover" style="--cover-bg:${bg};--cover-fg:${fg}">${cover}<span class="book-format">${escapeHtml(ext)}</span></div>
         <div class="book-info">
           ${book.category ? `<p class="book-category">${escapeHtml(book.category)}</p>` : ""}
@@ -88,6 +88,7 @@
           <p class="book-meta">${meta}</p>
           <div class="book-actions">
             <a class="book-download" data-download="${book.id}" href="${escapeHtml(publicUrl(book.file_path, label))}" rel="noopener">Download <span aria-hidden="true">↓</span></a>
+            ${shareMenuHtml(`${location.origin}${location.pathname}#book-${book.id}`, book.author ? `${book.title} by ${book.author}` : book.title)}
             ${ext === "pdf" ? `<a class="book-preview" href="${escapeHtml(publicUrl(book.file_path))}" target="_blank" rel="noopener">Read online</a>` : ""}
             ${editorMode ? `<button class="book-edit" type="button" data-edit="${book.id}">Edit</button><button class="book-delete" type="button" data-delete="${book.id}">Delete</button>` : ""}
           </div>
@@ -129,7 +130,28 @@
     }
     books = data;
     render();
+    showLinkedBook();
   }
+
+  // Opens a shared link like /#book-<id>: clears filters, scrolls to the book and highlights it.
+  function showLinkedBook() {
+    const match = location.hash.match(/^#book-([\w-]+)$/);
+    if (!match) return;
+    const book = books.find((b) => b.id === match[1]);
+    if (!book) return;
+    if (!visibleBooks().includes(book)) {
+      category = "All";
+      query = "";
+      search.value = "";
+      render();
+    }
+    const card = document.getElementById(`book-${book.id}`);
+    if (!card) return;
+    card.scrollIntoView({ behavior: "smooth", block: "center" });
+    card.classList.add("highlight");
+    setTimeout(() => card.classList.remove("highlight"), 3000);
+  }
+  window.addEventListener("hashchange", showLinkedBook);
 
   // --- Visitors: filtering and downloading ---
   search.addEventListener("input", () => { query = search.value; render(); });
