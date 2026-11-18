@@ -7,6 +7,13 @@ const starterPosts = [
 
 const staticPosts = [
   {
+    title: "The Evolution of Set Theory: From Cantor's Infinite Worlds to the Frontiers of Modern Mathematics",
+    excerpt: "How a nineteenth-century investigation into infinity transformed the foundations of mathematics: Cantor, Russell, Zermelo, Gödel, Cohen and the Continuum Hypothesis.",
+    href: "writing/evolution-of-set-theory/",
+    created_at: "2026-11-18T08:00:00Z",
+    minutes: 14
+  },
+  {
     title: "Can We Ever Find Absolute Truth? The Quest for Certainty in Logicomix",
     excerpt: "An essay on Logicomix, Russell's paradox and Gödel's theorems: what the search for firm foundations in mathematics did, and did not, prove about certainty.",
     href: "writing/logicomix-search-for-truth/",
